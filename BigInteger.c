@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <stdio.h>
 
-#define BASE_10 9
+#include "BigInteger.h"
 
 /*
 Turėtų būti realizuotos matematinės operacijos: add, sub, mul, div, mod.
@@ -11,18 +13,9 @@ isFull() dinaminio masyvo atveju tikrina, ar masyvas pilnai užpildytas; tiesini
 
 */
 
-typedef struct BID {
-   long digits;
-   struct BID* next;
-} BigIntegerData;
-
-typedef struct {
-   char sign;
-   BigIntegerData* LowerDigits;
-} BigInteger;
 
 BigInteger* Create() {
-   BigInteger* ADT = callloc(1, sizeof(BigInteger));
+   BigInteger* ADT = calloc(1, sizeof(BigInteger));
    return ADT;
 }
 
@@ -70,7 +63,7 @@ char* toString(BigInteger* ADT) {
          return NULL;
       }
 
-      int max_length = 1 + (count_elements * BASE_10) + 1; // +1 for \0, +1 for sign
+      int max_length = 1 + (count_elements * BASE_POW) + 1; // +1 for \0, +1 for sign
       char* result = malloc(max_length);
       if (NULL == result) {
          return NULL;
@@ -92,7 +85,11 @@ char* toString(BigInteger* ADT) {
       }
 
       for (int i = count_elements - 1; i >= 0; i--) {
-         pos += sprintf(result + pos, "%0*lu", BASE_10, elements[i]->digits);
+         if (0 == i) {
+            pos += sprintf(result + pos, "%lu", elements[i]->digits);
+         } else {
+            pos += sprintf(result + pos, "%0*lu", BASE_POW, elements[i]->digits);
+         }
       }
 
       result[pos] = '\0';
@@ -140,6 +137,7 @@ int makeEmpty(BigInteger* ADT) {
          free(current);
          current = temp;
       }
+      ADT->LowerDigits = NULL;
 
       return 1;
    }
@@ -156,9 +154,58 @@ int Done(BigInteger** ptr_to_ADT) {
    return -1;
 }
 
-int stringToBigInteger(char* number, BigInteger* ADT) {
-   if (NULL != number && NULL != ADT) {
+int stringToBigInteger(char* number_string, BigInteger* ADT) {
+   if (NULL != number_string && NULL != ADT) {
+      makeEmpty(ADT);
+
+      size_t num_length = strlen(number_string);
+      ADT->LowerDigits = calloc(1, sizeof(BigIntegerData));
+      if (NULL == ADT->LowerDigits) {
+         return -2;
+      }
+
+      if (number_string[0] == '-') {
+         ADT->sign = 1;
+         --num_length;
+         ++number_string;
+      }
+
+
+      BigIntegerData *current = ADT->LowerDigits;
+
+      for (int i = num_length - 1, j = 0; i >= 0; --i, ++j) {
+         if (j % BASE_POW == 0 && i != num_length - 1) {
+            current->next = calloc(1, sizeof(BigIntegerData));
+            if (NULL == current->next) {
+               makeEmpty(ADT);
+               return -2;
+            }
+            current = current->next; 
+         }
+
+         int is_integer = 0 <= number_string[i] - 48 <= 9 ? 1 : 0;
+
+         if ( !is_integer ) {
+            return -3;
+         }
+         current->digits += (number_string[i] - 48) * pow(BASE, j % BASE_POW);
+      }
+      return 1;
       
    }
    return -1;
 }
+
+BigInteger* add(BigInteger* a, BigInteger* b) {
+   if (NULL != a && NULL != b) {
+      BigInteger* result = malloc(sizeof(BigInteger));
+      if (NULL == result) {
+         return NULL;
+      }
+      
+   }
+   return NULL;
+}
+
+
+// sub, mul, div, mod
