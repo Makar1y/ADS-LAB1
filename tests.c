@@ -121,6 +121,101 @@ void test_stringToBigInteger_largeNumber() {
     printf("[X] test_stringToBigInteger_largeNumber passed\n");
 }
 
+void test_add_positive_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("100100100", bi1);
+    stringToBigInteger("899899900", bi2);
+    
+    BigInteger* result = add(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "1000000000") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_add_positive_numbers passed\n");
+}
+
+void test_add_negative_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("-3584148", bi1);
+    stringToBigInteger("-200", bi2);
+    
+    BigInteger* result = add(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "-3584348") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_add_negative_numbers passed\n");
+}
+
+void test_add_mixed_signs() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("100", bi1);
+    stringToBigInteger("-200", bi2);
+    
+    BigInteger* result = add(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "-100") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_add_mixed_signs passed\n");
+}
+
+void test_add_zero() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("0", bi1);
+    stringToBigInteger("789", bi2);
+    
+    BigInteger* result = add(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "789") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_add_zero passed\n");
+}
+
+void test_add_last_zero() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("1000000000", bi1);
+    stringToBigInteger("-2", bi2);
+    
+    BigInteger* result = add(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "999999998") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_add_zero passed\n");
+}
+
 int main() {
     printf("Running BigInteger ADT tests...\n\n");
     
@@ -134,6 +229,13 @@ int main() {
     test_isFull();
     test_makeEmpty();
     test_stringToBigInteger_largeNumber();
+
+    // Add
+    test_add_positive_numbers();
+    test_add_negative_numbers();
+    test_add_mixed_signs();
+    test_add_zero();
+    test_add_last_zero();
     
     printf("\n[X] All tests passed!\n");
     return 0;

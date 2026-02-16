@@ -101,12 +101,19 @@ char* toString(BigInteger* ADT) {
 BigInteger* clone(BigInteger* src_ADT) {
    if (NULL != src_ADT) {
       BigInteger* dest_ADT = malloc(sizeof(BigInteger));
+      if (NULL == dest_ADT) {
+         return NULL;
+      }
       dest_ADT->sign = src_ADT->sign;
 
       if (NULL != src_ADT->LowerDigits) {
 
          BigIntegerData* src_current = src_ADT->LowerDigits;
          dest_ADT->LowerDigits = calloc(1, sizeof(BigIntegerData));
+         if (NULL == dest_ADT->LowerDigits) {
+            Done(&dest_ADT);
+            return NULL;
+         }
          BigIntegerData* dest_current = dest_ADT->LowerDigits;
 
          do {
@@ -114,6 +121,10 @@ BigInteger* clone(BigInteger* src_ADT) {
             src_current = src_current->next;
             if (NULL != src_current) {
                dest_current->next = calloc(1, sizeof(BigIntegerData));
+               if (NULL == dest_current->next) {
+                  Done(&dest_ADT);
+                  return NULL;
+               }
                dest_current = dest_current->next;
             }
          } while (NULL != src_current);
@@ -174,7 +185,7 @@ int stringToBigInteger(char* number_string, BigInteger* ADT) {
       BigIntegerData *current = ADT->LowerDigits;
 
       for (int i = num_length - 1, j = 0; i >= 0; --i, ++j) {
-         if (j % BASE_POW == 0 && i != num_length - 1) {
+         if (j % BASE_POW == 0 && j != 0) {
             current->next = calloc(1, sizeof(BigIntegerData));
             if (NULL == current->next) {
                makeEmpty(ADT);
@@ -198,11 +209,80 @@ int stringToBigInteger(char* number_string, BigInteger* ADT) {
 
 BigInteger* add(BigInteger* a, BigInteger* b) {
    if (NULL != a && NULL != b) {
-      BigInteger* result = malloc(sizeof(BigInteger));
+      BigInteger* result = calloc(1, sizeof(BigInteger));
       if (NULL == result) {
          return NULL;
       }
+
+      BigIntegerData* aData = a->LowerDigits;
+      BigIntegerData* bData = b->LowerDigits;
+      result->LowerDigits = calloc(1, sizeof(BigInteger));
+      if (NULL ==  result->LowerDigits) {
+         Done(&result);
+         return NULL;
+      }
+      BigIntegerData* resultData = result->LowerDigits;
+      BigIntegerData* resultDataPrevious = NULL;
+
+      int aSign = a->sign == 1 ? -1 : 1;
+      int bSign = b->sign == 1 ? -1 : 1;
+      int toNext = 0;
       
+      while (aData || bData || toNext) {
+         // calculations
+         if (aData && bData) {
+            resultData->digits = (aData->digits * aSign + bData->digits *bSign) + toNext;
+         } else if (aData && !bData) {
+            resultData->digits = aData->digits * aSign + toNext;
+            if (0 == resultData->digits) {
+               free(resultData);
+               resultDataPrevious->next = NULL;
+               break;
+            }
+         } else if (!aData && bData) {
+            resultData->digits = bData->digits * bSign + toNext;
+            if (0 == resultData->digits) {
+               free(resultData);
+               resultDataPrevious->next = NULL;
+               break;
+            }
+         } else {
+            resultData->digits = toNext;
+         }
+
+         // next digits
+         if (aData) aData = aData->next;
+         if (bData) bData = bData->next;
+
+         // cary
+         if (resultData->digits < 0) {
+            if (aData || bData) {
+               toNext = -1;
+               resultData->digits += pow(BASE, BASE_POW);
+            } else {
+               result->sign = 1;
+               resultData->digits *= -1;
+            }
+         } else if (resultData->digits >= pow(BASE, BASE_POW) * BASE) {
+            toNext = 1;
+            resultData->digits -= pow(BASE, BASE_POW);
+         } else {
+            toNext = 0;
+         }
+
+         // next digits
+         if (aData || bData || toNext) {
+            resultData->next = calloc(1, sizeof(BigIntegerData));
+            resultDataPrevious = resultData;
+            resultData = resultData->next;
+            if (NULL == resultData) {
+               Done(&result);
+               return NULL;
+            }
+         }
+
+      }
+      return result;
    }
    return NULL;
 }
