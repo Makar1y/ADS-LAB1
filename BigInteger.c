@@ -63,7 +63,7 @@ char* toString(BigInteger* ADT) {
          return NULL;
       }
 
-      int max_length = 1 + (count_elements * BASE_POW) + 1; // +1 for \0, +1 for sign
+      long long max_length = 1 + (count_elements * BASE_POW) + 1; // +1 for \0, +1 for sign
       char* result = malloc(max_length);
       if (NULL == result) {
          return NULL;
@@ -75,21 +75,15 @@ char* toString(BigInteger* ADT) {
          result[pos] = '-';
          ++pos;
       }
+      BigIntegerData* current = ADT->HigherDigits;
 
-      BigIntegerData* elements[count_elements];
-      BigIntegerData* current = ADT->LowerDigits;
-      int id = 0;
       while (NULL != current) {
-         elements[id++] = current;
-         current = current->next;
-      }
-
-      for (int i = count_elements - 1; i >= 0; i--) {
-         if (0 == i) {
-            pos += sprintf(result + pos, "%lu", elements[i]->digits);
+         if (current == ADT->HigherDigits) {
+            pos += sprintf(result + pos, "%lu", current->digits);
          } else {
-            pos += sprintf(result + pos, "%0*lu", BASE_POW, elements[i]->digits);
+            pos += sprintf(result + pos, "%0*lu", BASE_POW, current->digits);
          }
+         current = current->previous;
       }
 
       result[pos] = '\0';
@@ -115,6 +109,7 @@ BigInteger* clone(BigInteger* src_ADT) {
             return NULL;
          }
          BigIntegerData* dest_current = dest_ADT->LowerDigits;
+         dest_current->previous = NULL;
 
          do {
             dest_current->digits = src_current->digits;
@@ -125,11 +120,15 @@ BigInteger* clone(BigInteger* src_ADT) {
                   Done(&dest_ADT);
                   return NULL;
                }
+               dest_current->next->previous = dest_current;
                dest_current = dest_current->next;
             }
          } while (NULL != src_current);
+         dest_current->next = NULL;
+         dest_ADT->HigherDigits = dest_current;
       } else {
          dest_ADT->LowerDigits = NULL;
+         dest_ADT->HigherDigits = NULL;
       }
       return dest_ADT;
    }
@@ -174,6 +173,8 @@ int stringToBigInteger(char* number_string, BigInteger* ADT) {
       if (NULL == ADT->LowerDigits) {
          return -2;
       }
+      ADT->LowerDigits->previous = NULL;
+      ADT->LowerDigits->next = NULL;
 
       if (number_string[0] == '-') {
          ADT->sign = 1;
@@ -191,6 +192,8 @@ int stringToBigInteger(char* number_string, BigInteger* ADT) {
                makeEmpty(ADT);
                return -2;
             }
+            current->next->previous = current;
+            current->next->next = NULL;
             current = current->next; 
          }
 
@@ -201,6 +204,7 @@ int stringToBigInteger(char* number_string, BigInteger* ADT) {
          }
          current->digits += (number_string[i] - 48) * pow(BASE, j % BASE_POW);
       }
+      ADT->HigherDigits = current;
       return 1;
       
    }
@@ -216,13 +220,14 @@ BigInteger* add(BigInteger* a, BigInteger* b) {
 
       BigIntegerData* aData = a->LowerDigits;
       BigIntegerData* bData = b->LowerDigits;
-      result->LowerDigits = calloc(1, sizeof(BigInteger));
+      result->LowerDigits = calloc(1, sizeof(BigIntegerData));
       if (NULL ==  result->LowerDigits) {
          Done(&result);
          return NULL;
       }
+      result->LowerDigits->previous = NULL;
+      result->LowerDigits->next = NULL;
       BigIntegerData* resultData = result->LowerDigits;
-      BigIntegerData* resultDataPrevious = NULL;
 
       int aSign = a->sign == 1 ? -1 : 1;
       int bSign = b->sign == 1 ? -1 : 1;
@@ -235,15 +240,19 @@ BigInteger* add(BigInteger* a, BigInteger* b) {
          } else if (aData && !bData) {
             resultData->digits = aData->digits * aSign + toNext;
             if (0 == resultData->digits) {
-               free(resultData);
-               resultDataPrevious->next = NULL;
+               result->HigherDigits = resultData->previous;
+               resultData = resultData->previous;
+               free(resultData->next);
+               resultData->next = NULL;
                break;
             }
          } else if (!aData && bData) {
             resultData->digits = bData->digits * bSign + toNext;
             if (0 == resultData->digits) {
-               free(resultData);
-               resultDataPrevious->next = NULL;
+               result->HigherDigits = resultData->previous;
+               resultData = resultData->previous;
+               free(resultData->next);
+               resultData->next = NULL;
                break;
             }
          } else {
@@ -273,15 +282,17 @@ BigInteger* add(BigInteger* a, BigInteger* b) {
          // next digits
          if (aData || bData || toNext) {
             resultData->next = calloc(1, sizeof(BigIntegerData));
-            resultDataPrevious = resultData;
-            resultData = resultData->next;
-            if (NULL == resultData) {
+            if (NULL == resultData->next) {
                Done(&result);
                return NULL;
             }
+            resultData->next->previous = resultData;
+            resultData->next->next = NULL;
+            resultData = resultData->next;
          }
 
       }
+      result->HigherDigits = resultData;
       return result;
    }
    return NULL;
@@ -301,14 +312,15 @@ BigInteger* sub(BigInteger* a, BigInteger* b) {
 
       BigIntegerData* aData = a->LowerDigits;
       BigIntegerData* bData = bNegative->LowerDigits;
-      result->LowerDigits = calloc(1, sizeof(BigInteger));
+      result->LowerDigits = calloc(1, sizeof(BigIntegerData));
       if (NULL ==  result->LowerDigits) {
          Done(&result);
          Done(&bNegative);
          return NULL;
       }
+      result->LowerDigits->previous = NULL;
+      result->LowerDigits->next = NULL;
       BigIntegerData* resultData = result->LowerDigits;
-      BigIntegerData* resultDataPrevious = NULL;
 
       int aSign = a->sign == 1 ? -1 : 1;
       int bSign = bNegative->sign == 1 ? -1 : 1;
@@ -321,15 +333,19 @@ BigInteger* sub(BigInteger* a, BigInteger* b) {
          } else if (aData && !bData) {
             resultData->digits = aData->digits * aSign + toNext;
             if (0 == resultData->digits) {
-               free(resultData);
-               resultDataPrevious->next = NULL;
+               result->HigherDigits = resultData->previous;
+               resultData = resultData->previous;
+               free(resultData->next);
+               resultData->next = NULL;
                break;
             }
          } else if (!aData && bData) {
             resultData->digits = bData->digits * bSign + toNext;
             if (0 == resultData->digits) {
-               free(resultData);
-               resultDataPrevious->next = NULL;
+               result->HigherDigits = resultData->previous;
+               resultData = resultData->previous;
+               free(resultData->next);
+               resultData->next = NULL;
                break;
             }
          } else {
@@ -359,16 +375,19 @@ BigInteger* sub(BigInteger* a, BigInteger* b) {
          // next digits
          if (aData || bData || toNext) {
             resultData->next = calloc(1, sizeof(BigIntegerData));
-            resultDataPrevious = resultData;
-            resultData = resultData->next;
-            if (NULL == resultData) {
+            if (NULL == resultData->next) {
                Done(&result);
                Done(&bNegative);
                return NULL;
             }
+            resultData->next->previous = resultData;
+            resultData->next->next = NULL;
+            resultData = resultData->next;
          }
 
       }
+      result->HigherDigits = resultData;
+      Done(&bNegative);
       return result;
    }
    return NULL;

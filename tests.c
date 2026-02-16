@@ -111,11 +111,11 @@ void test_makeEmpty() {
 
 void test_stringToBigInteger_largeNumber() {
     BigInteger* bi = Create();
-    int result = stringToBigInteger("123456789123456789", bi);
+    int result = stringToBigInteger("1234567891234567895791479245", bi);
     assert(result == 1);
     char* str = toString(bi);
     assert(str != NULL);
-    assert(strcmp(str, "123456789123456789") == 0);
+    assert(strcmp(str, "1234567891234567895791479245") == 0);
     free(str);
     Done(&bi);
     printf("[X] test_stringToBigInteger_largeNumber passed\n");
@@ -124,14 +124,14 @@ void test_stringToBigInteger_largeNumber() {
 void test_add_positive_numbers() {
     BigInteger* bi1 = Create();
     BigInteger* bi2 = Create();
-    stringToBigInteger("100100100", bi1);
-    stringToBigInteger("899899900", bi2);
+    stringToBigInteger("1000000000000000000000000000", bi1);
+    stringToBigInteger("9000000000000000000000000000", bi2);
     
     BigInteger* result = add(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
-    assert(strcmp(str, "1000000000") == 0);
+    assert(strcmp(str, "10000000000000000000000000000") == 0);
     free(str);
     
     Done(&bi1);

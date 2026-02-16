@@ -8,12 +8,14 @@
 typedef struct BID {
    long digits;
    struct BID* next;
+   struct BID* previous;
 } BigIntegerData;
 
 /// @brief 
 typedef struct {
    char sign;
    BigIntegerData* LowerDigits;
+   BigIntegerData* HigherDigits;
 } BigInteger;
 
 /// @brief 
