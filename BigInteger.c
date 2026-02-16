@@ -287,5 +287,91 @@ BigInteger* add(BigInteger* a, BigInteger* b) {
    return NULL;
 }
 
+BigInteger* sub(BigInteger* a, BigInteger* b) {
+   if (NULL != a && NULL != b) {
+      BigInteger* result = calloc(1, sizeof(BigInteger));
+      if (NULL == result) {
+         return NULL;
+      }
+      BigInteger* bNegative = clone(b);
+      if (NULL == bNegative) {
+         return NULL;
+      }
+      bNegative->sign = bNegative->sign == 0 ? 1 : 0;
 
-// sub, mul, div, mod
+      BigIntegerData* aData = a->LowerDigits;
+      BigIntegerData* bData = bNegative->LowerDigits;
+      result->LowerDigits = calloc(1, sizeof(BigInteger));
+      if (NULL ==  result->LowerDigits) {
+         Done(&result);
+         Done(&bNegative);
+         return NULL;
+      }
+      BigIntegerData* resultData = result->LowerDigits;
+      BigIntegerData* resultDataPrevious = NULL;
+
+      int aSign = a->sign == 1 ? -1 : 1;
+      int bSign = bNegative->sign == 1 ? -1 : 1;
+      int toNext = 0;
+      
+      while (aData || bData || toNext) {
+         // calculations
+         if (aData && bData) {
+            resultData->digits = (aData->digits * aSign + bData->digits *bSign) + toNext;
+         } else if (aData && !bData) {
+            resultData->digits = aData->digits * aSign + toNext;
+            if (0 == resultData->digits) {
+               free(resultData);
+               resultDataPrevious->next = NULL;
+               break;
+            }
+         } else if (!aData && bData) {
+            resultData->digits = bData->digits * bSign + toNext;
+            if (0 == resultData->digits) {
+               free(resultData);
+               resultDataPrevious->next = NULL;
+               break;
+            }
+         } else {
+            resultData->digits = toNext;
+         }
+
+         // next digits
+         if (aData) aData = aData->next;
+         if (bData) bData = bData->next;
+
+         // cary
+         if (resultData->digits < 0) {
+            if (aData || bData) {
+               toNext = -1;
+               resultData->digits += pow(BASE, BASE_POW);
+            } else {
+               result->sign = 1;
+               resultData->digits *= -1;
+            }
+         } else if (resultData->digits >= pow(BASE, BASE_POW) * BASE) {
+            toNext = 1;
+            resultData->digits -= pow(BASE, BASE_POW);
+         } else {
+            toNext = 0;
+         }
+
+         // next digits
+         if (aData || bData || toNext) {
+            resultData->next = calloc(1, sizeof(BigIntegerData));
+            resultDataPrevious = resultData;
+            resultData = resultData->next;
+            if (NULL == resultData) {
+               Done(&result);
+               Done(&bNegative);
+               return NULL;
+            }
+         }
+
+      }
+      return result;
+   }
+   return NULL;
+}
+
+// mul, div, mod

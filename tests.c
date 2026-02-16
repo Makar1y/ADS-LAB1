@@ -213,7 +213,102 @@ void test_add_last_zero() {
     Done(&bi1);
     Done(&bi2);
     Done(&result);
-    printf("[X] test_add_zero passed\n");
+    printf("[X] test_add_last_zero passed\n");
+}
+
+void test_sub_positive_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("1000000000", bi1);
+    stringToBigInteger("100100100", bi2);
+    
+    BigInteger* result = sub(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "899899900") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_sub_positive_numbers passed\n");
+}
+
+void test_sub_negative_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("-3584348", bi1);
+    stringToBigInteger("-200", bi2);
+    
+    BigInteger* result = sub(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "-3584148") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_sub_negative_numbers passed\n");
+}
+
+void test_sub_mixed_signs() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("100", bi1);
+    stringToBigInteger("-200", bi2);
+    
+    BigInteger* result = sub(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "300") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_sub_mixed_signs passed\n");
+}
+
+void test_sub_zero() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("789", bi1);
+    stringToBigInteger("0", bi2);
+    
+    BigInteger* result = sub(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "789") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_sub_zero passed\n");
+}
+
+void test_sub_same_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("12345", bi1);
+    stringToBigInteger("12345", bi2);
+    
+    BigInteger* result = sub(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "0") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_sub_same_numbers passed\n");
 }
 
 int main() {
@@ -236,6 +331,13 @@ int main() {
     test_add_mixed_signs();
     test_add_zero();
     test_add_last_zero();
+
+    // Sub 
+    test_sub_positive_numbers();
+    test_sub_negative_numbers();
+    test_sub_mixed_signs();
+    test_sub_zero();
+    test_sub_same_numbers();
     
     printf("\n[X] All tests passed!\n");
     return 0;

@@ -67,4 +67,10 @@ int stringToBigInteger(char* number_string, BigInteger* ADT);
 /// @return 
 BigInteger* add(BigInteger* a, BigInteger* b);
 
+/// @brief 
+/// @param a 
+/// @param b 
+/// @return 
+BigInteger* sub(BigInteger* a, BigInteger* b);
+
 #endif
