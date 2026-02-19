@@ -3,6 +3,8 @@
 
 #define BASE 10
 #define BASE_POW 9
+#define true 1
+#define false !true
 
 /// @brief 
 typedef struct BID {
@@ -47,6 +49,8 @@ char* toString(BigInteger* ADT);
 /// @return 
 BigInteger* clone(BigInteger* src_ADT);
 
+int copy(BigInteger* src_ADT, BigInteger* dst_ADT);
+
 /// @brief 
 /// @param ADT 
 /// @return 
@@ -75,4 +79,11 @@ BigInteger* add(BigInteger* a, BigInteger* b);
 /// @return 
 BigInteger* sub(BigInteger* a, BigInteger* b);
 
+/// @brief 
+/// @param a 
+/// @param b 
+/// @return 
+BigInteger* mul(BigInteger* a, BigInteger* b);
+
+// Not use a = add(a, b);
 #endif

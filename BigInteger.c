@@ -1,18 +1,21 @@
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <stdio.h>
 
 #include "BigInteger.h"
 
 /*
 Turėtų būti realizuotos matematinės operacijos: add, sub, mul, div, mod.
-
-Turėtų būti realizuotos užklausos:
-isFull() dinaminio masyvo atveju tikrina, ar masyvas pilnai užpildytas; tiesinio sąrašo atveju gražina False ???
-
 */
 
+
+long long myPow(int num, int pow) {
+   long long result = 1;
+   for (int i = 0; i < pow; ++i) {
+      result *= num;
+   }
+   return result;
+}
 
 BigInteger* Create() {
    BigInteger* ADT = calloc(1, sizeof(BigInteger));
@@ -20,71 +23,63 @@ BigInteger* Create() {
 }
 
 int count(BigInteger* ADT) {
-   if (NULL != ADT) {
-      BigIntegerData* element = ADT->LowerDigits;
-      int counter = 0;
-
-      while (NULL != element) {
-         ++counter;
-         element = element->next;
-      }
-      return counter;
+   if (!ADT) {
+      return -1;
    }
-   return -1;
+   BigIntegerData* element = ADT->LowerDigits;
+   int counter = 0;
+
+   while (element) {
+      ++counter;
+      element = element->next;
+   }
+   return counter;
 }
 
 int isEmpty(BigInteger* ADT) {
-   if (NULL != ADT) {
-      int result = count(ADT);
-
-      switch (result) {
-         case 0:
-            return 1;
-         case -1:
-            return -1;
-         default:
-            return 0;
-      }
+   if (!ADT) {
+      return true;
    }
-   return -1;
+   int result = count(ADT);
+   if (result == 0) {
+      return true;
+   }
+   return false;
 }
 
 int isFull(BigInteger* ADT) {
-   if (NULL != ADT) {
-      return 0; // TODO Ask professor
-   }
-   return -1;
+   return false;
 }
 
 char* toString(BigInteger* ADT) {
    if (NULL != ADT) {
-      int count_elements = count(ADT);
-      if (count_elements <= 0) {
+      size_t size = 1 + (count(ADT) * BASE_POW) + 1; // +1 for \0, +1 for sign
+      char* result = malloc(size); 
+      if (!result) {
          return NULL;
       }
-
-      long long max_length = 1 + (count_elements * BASE_POW) + 1; // +1 for \0, +1 for sign
-      char* result = malloc(max_length);
-      if (NULL == result) {
-         return NULL;
+      if (!ADT->HigherDigits) {
+         strcpy(result, "0");
+         return result;
       }
 
-      int pos = 0;
-
-      if (1 == ADT->sign) {
+      size_t pos = 0;
+      if (ADT->sign == 1) {
          result[pos] = '-';
          ++pos;
-      }
+      }    
+      
       BigIntegerData* current = ADT->HigherDigits;
+      char* tmp = NULL;
 
-      while (NULL != current) {
+      while (current) {
          if (current == ADT->HigherDigits) {
             pos += sprintf(result + pos, "%lu", current->digits);
          } else {
             pos += sprintf(result + pos, "%0*lu", BASE_POW, current->digits);
          }
          current = current->previous;
-      }
+      };
 
       result[pos] = '\0';
       return result;
@@ -92,305 +87,370 @@ char* toString(BigInteger* ADT) {
    return NULL;
 }
 
-BigInteger* clone(BigInteger* src_ADT) {
-   if (NULL != src_ADT) {
-      BigInteger* dest_ADT = malloc(sizeof(BigInteger));
-      if (NULL == dest_ADT) {
+BigInteger* clone(BigInteger* src) {
+   if (NULL != src) {
+      BigInteger* dest = Create();
+      if (copy(src, dest) < 0) {
+         Done(&dest);
          return NULL;
       }
-      dest_ADT->sign = src_ADT->sign;
-
-      if (NULL != src_ADT->LowerDigits) {
-
-         BigIntegerData* src_current = src_ADT->LowerDigits;
-         dest_ADT->LowerDigits = calloc(1, sizeof(BigIntegerData));
-         if (NULL == dest_ADT->LowerDigits) {
-            Done(&dest_ADT);
-            return NULL;
-         }
-         BigIntegerData* dest_current = dest_ADT->LowerDigits;
-         dest_current->previous = NULL;
-
-         do {
-            dest_current->digits = src_current->digits;
-            src_current = src_current->next;
-            if (NULL != src_current) {
-               dest_current->next = calloc(1, sizeof(BigIntegerData));
-               if (NULL == dest_current->next) {
-                  Done(&dest_ADT);
-                  return NULL;
-               }
-               dest_current->next->previous = dest_current;
-               dest_current = dest_current->next;
-            }
-         } while (NULL != src_current);
-         dest_current->next = NULL;
-         dest_ADT->HigherDigits = dest_current;
-      } else {
-         dest_ADT->LowerDigits = NULL;
-         dest_ADT->HigherDigits = NULL;
-      }
-      return dest_ADT;
+      return dest;
    }
    return NULL;
+}
+
+int copy(BigInteger* src, BigInteger* dest) {
+   if (!src || !dest) {
+      return -1;
+   }
+   makeEmpty(dest);
+   dest->sign = src->sign;
+
+   BigIntegerData* src_curr = src->LowerDigits;
+   BigIntegerData* dest_curr = dest->LowerDigits == NULL ? calloc(1, sizeof(BigIntegerData)) : dest->LowerDigits;
+   if (!dest_curr) return -2;
+
+   BigIntegerData* prev = NULL;
+
+   while (src_curr) {
+      dest_curr->digits = src_curr->digits;
+
+      if (src_curr->next) {
+         dest_curr->next = calloc(1, sizeof(BigIntegerData));
+         if (!dest_curr->next) return -3;
+
+         dest_curr->next->previous = dest_curr;
+         dest_curr = dest_curr->next;
+      }
+      src_curr = src_curr->next;
+   }
+   dest->HigherDigits = dest_curr;
+   return 0;
 }
 
 int makeEmpty(BigInteger* ADT) {
-   if (NULL != ADT) {
-      BigIntegerData* current = ADT->LowerDigits;
-      BigIntegerData* temp;
-
-      ADT->sign = 0;
-
-      while (NULL != current) {
-         temp = current->next;
-         free(current);
-         current = temp;
-      }
-      ADT->LowerDigits = NULL;
-
-      return 1;
+   if (!ADT) {
+      return -1;
    }
-   return -1;
+   BigIntegerData* current = ADT->LowerDigits;
+   BigIntegerData* temp;
+
+   ADT->sign = 0;
+
+   while (NULL != current) {
+      temp = current->next;
+      free(current);
+      current = temp;
+   }
+   ADT->LowerDigits = NULL;
+   ADT->HigherDigits = NULL;
+
+   return 0;
 }
 
 int Done(BigInteger** ptr_to_ADT) {
-   if (NULL != ptr_to_ADT && NULL != *ptr_to_ADT) {
-      makeEmpty(*ptr_to_ADT);
-      free(*ptr_to_ADT);
-      *ptr_to_ADT = NULL;
-      return 1;
+   if (!ptr_to_ADT || !ptr_to_ADT) {
+      return -1;
    }
-   return -1;
+   makeEmpty(*ptr_to_ADT);
+   free(*ptr_to_ADT);
+   *ptr_to_ADT = NULL;
+   return 0;
 }
 
 int stringToBigInteger(char* number_string, BigInteger* ADT) {
-   if (NULL != number_string && NULL != ADT) {
-      makeEmpty(ADT);
+   if (!number_string || !ADT) {
+      return -1;
+   }
+   makeEmpty(ADT);
 
-      size_t num_length = strlen(number_string);
-      ADT->LowerDigits = calloc(1, sizeof(BigIntegerData));
-      if (NULL == ADT->LowerDigits) {
-         return -2;
-      }
-      ADT->LowerDigits->previous = NULL;
-      ADT->LowerDigits->next = NULL;
+   size_t num_length = strlen(number_string);
+   ADT->LowerDigits = calloc(1, sizeof(BigIntegerData));
+   if (NULL == ADT->LowerDigits) {
+      return -2;
+   }
+   ADT->LowerDigits->previous = NULL;
+   ADT->LowerDigits->next = NULL;
 
-      if (number_string[0] == '-') {
-         ADT->sign = 1;
-         --num_length;
-         ++number_string;
-      }
+   if (number_string[0] == '-') {
+      ADT->sign = 1;
+      --num_length;
+      ++number_string;
+   }
 
+   BigIntegerData *current = ADT->LowerDigits;
 
-      BigIntegerData *current = ADT->LowerDigits;
-
-      for (int i = num_length - 1, j = 0; i >= 0; --i, ++j) {
-         if (j % BASE_POW == 0 && j != 0) {
-            current->next = calloc(1, sizeof(BigIntegerData));
-            if (NULL == current->next) {
-               makeEmpty(ADT);
-               return -2;
-            }
-            current->next->previous = current;
-            current->next->next = NULL;
-            current = current->next; 
-         }
-
-         int is_integer = 0 <= number_string[i] - 48 <= 9 ? 1 : 0;
-
-         if ( !is_integer ) {
+   for (int i = num_length - 1, j = 0; i >= 0; --i, ++j) {
+      if (j % BASE_POW == 0 && j != 0) {
+         current->next = calloc(1, sizeof(BigIntegerData));
+         if (NULL == current->next) {
+            makeEmpty(ADT);
             return -3;
          }
-         current->digits += (number_string[i] - 48) * pow(BASE, j % BASE_POW);
+         current->next->previous = current;
+         current = current->next; 
       }
-      ADT->HigherDigits = current;
-      return 1;
-      
+
+      int is_integer = (0 <= number_string[i] - 48)  &&  (number_string[i] - 48 <= 9);
+
+      if ( !is_integer ) {
+         return -4;
+      }
+      current->digits += (number_string[i] - 48) * myPow(BASE, j % BASE_POW);
    }
-   return -1;
+   ADT->HigherDigits = current;
+   return 0;
+}
+
+int compareADTs(BigInteger* a, BigInteger* b) {
+   int countA = count(a), countB = count(b);
+   if (countA > countB) return 1;
+   if (countB > countA) return -1;
+
+   BigIntegerData* curA = a->HigherDigits;
+   BigIntegerData* curB = b->HigherDigits;
+
+   while (curA && curB) {
+      if (curA->digits > curB->digits) return 1;
+      if (curB->digits > curA->digits) return -1;
+      curA = curA->previous;
+      curB = curB->previous;
+   }
+   return 0;
+}
+
+BigInteger* addAbsolute(BigInteger* a, BigInteger* b) {
+   BigInteger* res = Create();
+   BigIntegerData *curA = a->LowerDigits, 
+                  *curB = b->LowerDigits, 
+                  *lastNode = NULL;
+   long long carry = 0;
+   long long limit = myPow(BASE, BASE_POW);
+
+   while (curA || curB || carry) {
+      long long sum = carry + (curA ? curA->digits : 0) + (curB ? curB->digits : 0);
+      carry = sum / limit;
+      
+      BigIntegerData* dataNode = calloc(1, sizeof(BigIntegerData));
+      if (!dataNode) return NULL;
+      dataNode->digits = sum % limit;
+      
+      if (!res->LowerDigits) {
+         res->LowerDigits = dataNode;
+      }
+      if (lastNode) {
+         lastNode->next = dataNode;
+         dataNode->previous = lastNode;
+      }
+      lastNode = dataNode;
+
+      if (curA) {
+         curA = curA->next;
+      }
+      if (curB) {
+         curB = curB->next;
+      }
+   }
+   res->HigherDigits = lastNode;
+   return res;
+}
+
+BigInteger* subAbsolute(BigInteger* a, BigInteger* b) {
+   BigInteger* res = Create();
+   BigIntegerData *curA = a->LowerDigits, 
+                  *curB = b->LowerDigits, 
+                  *lastNode = NULL;
+   long long cary = 0;
+   long long limit = myPow(BASE, BASE_POW);
+
+   while (curA) {
+      long long valA = curA->digits;
+      long long valB = curB ? curB->digits : 0;
+      long long difference = valA - valB - cary;
+
+      if (difference < 0) {
+         difference += limit;
+         cary = 1;
+      } else {
+         cary = 0;
+      }
+
+      BigIntegerData* dataNode = calloc(1, sizeof(BigIntegerData));
+      if (!dataNode) return NULL;
+      dataNode->digits = difference;
+
+      if (!res->LowerDigits) {
+         res->LowerDigits = dataNode;
+      }
+      if (lastNode) {
+         lastNode->next = dataNode;
+         dataNode->previous = lastNode;
+      }
+      lastNode = dataNode;
+
+      curA = curA->next;
+      if (curB) {
+         curB = curB->next;
+      }
+   }
+   res->HigherDigits = lastNode;
+   
+   while (res->HigherDigits && res->HigherDigits->digits == 0 && res->HigherDigits != res->LowerDigits) {
+      res->HigherDigits = res->HigherDigits->previous;
+      free(res->HigherDigits->next);
+      res->HigherDigits->next = NULL;
+   }
+   return res;
 }
 
 BigInteger* add(BigInteger* a, BigInteger* b) {
-   if (NULL != a && NULL != b) {
-      BigInteger* result = calloc(1, sizeof(BigInteger));
-      if (NULL == result) {
-         return NULL;
-      }
+   if (!a || !b) return NULL;
 
-      BigIntegerData* aData = a->LowerDigits;
-      BigIntegerData* bData = b->LowerDigits;
-      result->LowerDigits = calloc(1, sizeof(BigIntegerData));
-      if (NULL ==  result->LowerDigits) {
-         Done(&result);
-         return NULL;
+   if (a->sign == b->sign) {
+      BigInteger* res = addAbsolute(a, b);
+      res->sign = a->sign;
+      return res;
+   } else {
+      int cmp = compareADTs(a, b);
+      if (cmp == 0) {
+         BigInteger* res = Create();
+         res->LowerDigits = res->HigherDigits = calloc(1, sizeof(BigIntegerData));
+         return res;
       }
-      result->LowerDigits->previous = NULL;
-      result->LowerDigits->next = NULL;
-      BigIntegerData* resultData = result->LowerDigits;
-
-      int aSign = a->sign == 1 ? -1 : 1;
-      int bSign = b->sign == 1 ? -1 : 1;
-      int toNext = 0;
       
-      while (aData || bData || toNext) {
-         // calculations
-         if (aData && bData) {
-            resultData->digits = (aData->digits * aSign + bData->digits *bSign) + toNext;
-         } else if (aData && !bData) {
-            resultData->digits = aData->digits * aSign + toNext;
-            if (0 == resultData->digits) {
-               result->HigherDigits = resultData->previous;
-               resultData = resultData->previous;
-               free(resultData->next);
-               resultData->next = NULL;
-               break;
-            }
-         } else if (!aData && bData) {
-            resultData->digits = bData->digits * bSign + toNext;
-            if (0 == resultData->digits) {
-               result->HigherDigits = resultData->previous;
-               resultData = resultData->previous;
-               free(resultData->next);
-               resultData->next = NULL;
-               break;
-            }
-         } else {
-            resultData->digits = toNext;
-         }
-
-         // next digits
-         if (aData) aData = aData->next;
-         if (bData) bData = bData->next;
-
-         // cary
-         if (resultData->digits < 0) {
-            if (aData || bData) {
-               toNext = -1;
-               resultData->digits += pow(BASE, BASE_POW);
-            } else {
-               result->sign = 1;
-               resultData->digits *= -1;
-            }
-         } else if (resultData->digits >= pow(BASE, BASE_POW) * BASE) {
-            toNext = 1;
-            resultData->digits -= pow(BASE, BASE_POW);
-         } else {
-            toNext = 0;
-         }
-
-         // next digits
-         if (aData || bData || toNext) {
-            resultData->next = calloc(1, sizeof(BigIntegerData));
-            if (NULL == resultData->next) {
-               Done(&result);
-               return NULL;
-            }
-            resultData->next->previous = resultData;
-            resultData->next->next = NULL;
-            resultData = resultData->next;
-         }
-
+      BigInteger* res;
+      if (cmp > 0) {
+         res = subAbsolute(a, b);
+         res->sign = a->sign;
+      } else {
+         res = subAbsolute(b, a);
+         res->sign = b->sign;
       }
-      result->HigherDigits = resultData;
-      return result;
+      return res;
    }
-   return NULL;
 }
 
 BigInteger* sub(BigInteger* a, BigInteger* b) {
-   if (NULL != a && NULL != b) {
-      BigInteger* result = calloc(1, sizeof(BigInteger));
-      if (NULL == result) {
-         return NULL;
-      }
-      BigInteger* bNegative = clone(b);
-      if (NULL == bNegative) {
-         return NULL;
-      }
-      bNegative->sign = bNegative->sign == 0 ? 1 : 0;
-
-      BigIntegerData* aData = a->LowerDigits;
-      BigIntegerData* bData = bNegative->LowerDigits;
-      result->LowerDigits = calloc(1, sizeof(BigIntegerData));
-      if (NULL ==  result->LowerDigits) {
-         Done(&result);
-         Done(&bNegative);
-         return NULL;
-      }
-      result->LowerDigits->previous = NULL;
-      result->LowerDigits->next = NULL;
-      BigIntegerData* resultData = result->LowerDigits;
-
-      int aSign = a->sign == 1 ? -1 : 1;
-      int bSign = bNegative->sign == 1 ? -1 : 1;
-      int toNext = 0;
-      
-      while (aData || bData || toNext) {
-         // calculations
-         if (aData && bData) {
-            resultData->digits = (aData->digits * aSign + bData->digits *bSign) + toNext;
-         } else if (aData && !bData) {
-            resultData->digits = aData->digits * aSign + toNext;
-            if (0 == resultData->digits) {
-               result->HigherDigits = resultData->previous;
-               resultData = resultData->previous;
-               free(resultData->next);
-               resultData->next = NULL;
-               break;
-            }
-         } else if (!aData && bData) {
-            resultData->digits = bData->digits * bSign + toNext;
-            if (0 == resultData->digits) {
-               result->HigherDigits = resultData->previous;
-               resultData = resultData->previous;
-               free(resultData->next);
-               resultData->next = NULL;
-               break;
-            }
-         } else {
-            resultData->digits = toNext;
-         }
-
-         // next digits
-         if (aData) aData = aData->next;
-         if (bData) bData = bData->next;
-
-         // cary
-         if (resultData->digits < 0) {
-            if (aData || bData) {
-               toNext = -1;
-               resultData->digits += pow(BASE, BASE_POW);
-            } else {
-               result->sign = 1;
-               resultData->digits *= -1;
-            }
-         } else if (resultData->digits >= pow(BASE, BASE_POW) * BASE) {
-            toNext = 1;
-            resultData->digits -= pow(BASE, BASE_POW);
-         } else {
-            toNext = 0;
-         }
-
-         // next digits
-         if (aData || bData || toNext) {
-            resultData->next = calloc(1, sizeof(BigIntegerData));
-            if (NULL == resultData->next) {
-               Done(&result);
-               Done(&bNegative);
-               return NULL;
-            }
-            resultData->next->previous = resultData;
-            resultData->next->next = NULL;
-            resultData = resultData->next;
-         }
-
-      }
-      result->HigherDigits = resultData;
-      Done(&bNegative);
-      return result;
-   }
-   return NULL;
+   if (!a || !b) return NULL;
+   
+   int originalSignB = b->sign;
+   b->sign = (originalSignB == 0) ? 1 : 0;
+   
+   BigInteger* res = add(a, b);
+   
+   b->sign = originalSignB;
+   return res;
 }
 
-// mul, div, mod
+BigInteger* mul(BigInteger* a, BigInteger* b) {
+   if (NULL == a || NULL == b) {
+      return NULL;
+   }
+
+   int countA = count(a), countB = count(b);
+
+   if (countA == 0 || countB == 0) {
+      BigInteger* zero = Create();
+      if (zero) {
+         zero->LowerDigits = calloc(1, sizeof(BigIntegerData));
+         if (zero->LowerDigits) zero->HigherDigits = zero->LowerDigits;
+      }
+      return zero;
+   }
+
+   unsigned long long* aDigits = calloc(countA, sizeof(unsigned long long));
+   unsigned long long* bDigits = calloc(countB, sizeof(unsigned long long));
+   if (!aDigits || !bDigits) {
+      free(aDigits);
+      free(bDigits);
+      return NULL;
+   }
+
+   BigIntegerData* cur = a->LowerDigits;
+   for (int i = 0; i < countA; ++i) {
+      aDigits[i] = (unsigned long long)cur->digits;
+      cur = cur->next;
+   }
+   cur = b->LowerDigits;
+   for (int i = 0; i < countB; ++i) {
+      bDigits[i] = (unsigned long long)cur->digits;
+      cur = cur->next;
+   }
+
+   int resSize = countA + countB;
+   unsigned long long* resDigits = calloc(resSize, sizeof(unsigned long long));
+   if (!resDigits) {
+      free(aDigits);
+      free(bDigits);
+      return NULL;
+   }
+
+   // multiplication
+   for (int i = 0; i < countA; ++i) {
+      for (int j = 0; j < countB; ++j) {
+         resDigits[i + j] += aDigits[i] * bDigits[j];
+      }
+   }
+
+   unsigned long long basePow = myPow(BASE, BASE_POW);
+
+   // carries
+   for (int i = 0; i < resSize; ++i) {
+      unsigned long long carry = resDigits[i] / basePow;
+      resDigits[i] = resDigits[i] % basePow;
+      if (carry) {
+         if (i + 1 >= resSize) {
+            int newSize = resSize + 1;
+            unsigned long long* tmp = realloc(resDigits, newSize * sizeof(unsigned long long));
+            if (!tmp) { free(aDigits); free(bDigits); free(resDigits); return NULL; }
+            resDigits = tmp;
+            resDigits[resSize] = 0;
+            resSize = newSize;
+         }
+         resDigits[i + 1] += carry;
+      }
+   }
+
+   int highestNonZero = resSize - 1;
+   while (highestNonZero > 0 && resDigits[highestNonZero] == 0) --highestNonZero;
+
+   BigInteger* result = Create();
+   if (!result) {
+      free(aDigits);
+      free(bDigits);
+      free(resDigits);
+      return NULL;
+   }
+
+   BigIntegerData* tmp = NULL;
+   for (int i = 0; i <= highestNonZero; ++i) {
+      cur = calloc(1, sizeof(BigIntegerData));
+      if (!result->LowerDigits) {
+         result->LowerDigits = cur;
+      }
+      if (!cur) {
+         Done(&result);
+         free(aDigits);
+         free(bDigits);
+         free(resDigits);
+         return NULL;
+      }
+      cur->digits = (long)resDigits[i];
+      cur->previous = tmp;
+      cur->next = NULL;
+      if (tmp) {
+         tmp->next = cur;
+      }
+      tmp = cur;
+   }
+   result->HigherDigits = cur;
+
+   result->sign = (a->sign + b->sign) % 2;
+
+   free(aDigits);
+   free(bDigits);
+   free(resDigits);
+   return result;
+}
+
+// div, mod
