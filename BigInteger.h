@@ -6,6 +6,14 @@
 #define true 1
 #define false !true
 
+/*
+   !!!
+   Using functions that returns and accepts BigInteger* types with same 
+   BigInteger ptr for argument and return value will lead to a memory leak.
+   For example:
+      a = BigIntegerAdd(a, b); lead to memory leak(loosing original a pointer).
+*/
+
 /// @brief 
 typedef struct BID {
    long digits;
@@ -49,6 +57,10 @@ char* toString(BigInteger* ADT);
 /// @return 
 BigInteger* clone(BigInteger* src_ADT);
 
+/// @brief 
+/// @param src_ADT 
+/// @param dst_ADT 
+/// @return 
 int copy(BigInteger* src_ADT, BigInteger* dst_ADT);
 
 /// @brief 
@@ -58,7 +70,7 @@ int makeEmpty(BigInteger* ADT);
 
 /// @brief 
 /// @param ptr_to_ADT 
-/// @return 
+/// @return
 int Done(BigInteger** ptr_to_ADT);
 
 /// @brief 
@@ -71,19 +83,36 @@ int stringToBigInteger(char* number_string, BigInteger* ADT);
 /// @param a 
 /// @param b 
 /// @return 
-BigInteger* add(BigInteger* a, BigInteger* b);
+int compareADTs(BigInteger* a, BigInteger* b);
 
 /// @brief 
 /// @param a 
 /// @param b 
 /// @return 
-BigInteger* sub(BigInteger* a, BigInteger* b);
+BigInteger* BigIntegerAdd(BigInteger* a, BigInteger* b);
 
 /// @brief 
 /// @param a 
 /// @param b 
 /// @return 
-BigInteger* mul(BigInteger* a, BigInteger* b);
+BigInteger* BigIntegerSub(BigInteger* a, BigInteger* b);
 
-// Not use a = add(a, b);
+/// @brief 
+/// @param a 
+/// @param b 
+/// @return 
+BigInteger* BigIntegerMul(BigInteger* a, BigInteger* b);
+
+/// @brief 
+/// @param a 
+/// @param b 
+/// @return 
+BigInteger* BigIntegerDiv(BigInteger* a, BigInteger* b);
+
+/// @brief 
+/// @param a 
+/// @param b 
+/// @return 
+BigInteger* BigIntegerMod(BigInteger* a, BigInteger* b);
+
 #endif

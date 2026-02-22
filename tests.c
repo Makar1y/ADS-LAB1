@@ -127,7 +127,7 @@ void test_add_positive_numbers() {
     stringToBigInteger("1000000000000000000000000000", bi1);
     stringToBigInteger("9000000000000000000000000000", bi2);
     
-    BigInteger* result = add(bi1, bi2);
+    BigInteger* result = BigIntegerAdd(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -146,7 +146,7 @@ void test_add_negative_numbers() {
     stringToBigInteger("-3584148", bi1);
     stringToBigInteger("-200", bi2);
     
-    BigInteger* result = add(bi1, bi2);
+    BigInteger* result = BigIntegerAdd(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -165,7 +165,7 @@ void test_add_mixed_signs() {
     stringToBigInteger("100", bi1);
     stringToBigInteger("-200", bi2);
     
-    BigInteger* result = add(bi1, bi2);
+    BigInteger* result = BigIntegerAdd(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -184,7 +184,7 @@ void test_add_zero() {
     stringToBigInteger("0", bi1);
     stringToBigInteger("789", bi2);
     
-    BigInteger* result = add(bi1, bi2);
+    BigInteger* result = BigIntegerAdd(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -203,7 +203,7 @@ void test_add_last_zero() {
     stringToBigInteger("1000000000", bi1);
     stringToBigInteger("-2", bi2);
     
-    BigInteger* result = add(bi1, bi2);
+    BigInteger* result = BigIntegerAdd(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -222,7 +222,7 @@ void test_sub_positive_numbers() {
     stringToBigInteger("1000000000", bi1);
     stringToBigInteger("100100100", bi2);
     
-    BigInteger* result = sub(bi1, bi2);
+    BigInteger* result = BigIntegerSub(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -241,7 +241,7 @@ void test_sub_negative_numbers() {
     stringToBigInteger("-3584348", bi1);
     stringToBigInteger("-200", bi2);
     
-    BigInteger* result = sub(bi1, bi2);
+    BigInteger* result = BigIntegerSub(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -260,7 +260,7 @@ void test_sub_mixed_signs() {
     stringToBigInteger("100", bi1);
     stringToBigInteger("-200", bi2);
     
-    BigInteger* result = sub(bi1, bi2);
+    BigInteger* result = BigIntegerSub(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -279,7 +279,7 @@ void test_sub_zero() {
     stringToBigInteger("789", bi1);
     stringToBigInteger("0", bi2);
     
-    BigInteger* result = sub(bi1, bi2);
+    BigInteger* result = BigIntegerSub(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -298,7 +298,7 @@ void test_sub_same_numbers() {
     stringToBigInteger("12345", bi1);
     stringToBigInteger("12345", bi2);
     
-    BigInteger* result = sub(bi1, bi2);
+    BigInteger* result = BigIntegerSub(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -317,7 +317,7 @@ void test_mul_positive_numbers() {
     stringToBigInteger("123", bi1);
     stringToBigInteger("456", bi2);
     
-    BigInteger* result = mul(bi1, bi2);
+    BigInteger* result = BigIntegerMul(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -336,7 +336,7 @@ void test_mul_negative_numbers() {
     stringToBigInteger("-50", bi1);
     stringToBigInteger("-20", bi2);
     
-    BigInteger* result = mul(bi1, bi2);
+    BigInteger* result = BigIntegerMul(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -355,7 +355,7 @@ void test_mul_mixed_signs() {
     stringToBigInteger("25", bi1);
     stringToBigInteger("-4", bi2);
     
-    BigInteger* result = mul(bi1, bi2);
+    BigInteger* result = BigIntegerMul(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -374,7 +374,7 @@ void test_mul_by_zero() {
     stringToBigInteger("999999", bi1);
     stringToBigInteger("0", bi2);
     
-    BigInteger* result = mul(bi1, bi2);
+    BigInteger* result = BigIntegerMul(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -393,7 +393,7 @@ void test_mul_by_one() {
     stringToBigInteger("54321", bi1);
     stringToBigInteger("1", bi2);
     
-    BigInteger* result = mul(bi1, bi2);
+    BigInteger* result = BigIntegerMul(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -412,7 +412,7 @@ void test_mul_large_numbers() {
     stringToBigInteger("123456789", bi1);
     stringToBigInteger("987654321", bi2);
     
-    BigInteger* result = mul(bi1, bi2);
+    BigInteger* result = BigIntegerMul(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
@@ -423,6 +423,159 @@ void test_mul_large_numbers() {
     Done(&bi2);
     Done(&result);
     printf("[X] test_mul_large_numbers passed\n");
+}
+
+void test_div_positive_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("1000", bi1);
+    stringToBigInteger("10", bi2);
+    
+    BigInteger* result = BigIntegerDiv(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "100") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_div_positive_numbers passed\n");
+}
+
+void test_div_negative_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("-1000", bi1);
+    stringToBigInteger("-10", bi2);
+    
+    BigInteger* result = BigIntegerDiv(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "100") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_div_negative_numbers passed\n");
+}
+
+void test_div_mixed_signs() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("1000", bi1);
+    stringToBigInteger("-10", bi2);
+    
+    BigInteger* result = BigIntegerDiv(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "-100") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_div_mixed_signs passed\n");
+}
+
+void test_mod_positive_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("1000", bi1);
+    stringToBigInteger("7", bi2);
+    
+    BigInteger* result = BigIntegerMod(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "6") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_mod_positive_numbers passed\n");
+}
+
+void test_mod_negative_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("-1000", bi1);
+    stringToBigInteger("-7", bi2);
+    
+    BigInteger* result = BigIntegerMod(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "0") == 0 || strcmp(str, "-0") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_mod_negative_numbers passed\n");
+}
+
+void test_mod_mixed_signs() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("1000", bi1);
+    stringToBigInteger("-7", bi2);
+    
+    BigInteger* result = BigIntegerMod(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "6") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_mod_mixed_signs passed\n");
+}
+
+void test_div_large_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("123456789123456789", bi1);
+    stringToBigInteger("987654321", bi2);
+    
+    BigInteger* result = BigIntegerDiv(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    printf("%s\n", str);
+    assert(strcmp(str, "124999999") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_div_large_numbers passed\n");
+}
+
+void test_mod_large_numbers() {
+    BigInteger* bi1 = Create();
+    BigInteger* bi2 = Create();
+    stringToBigInteger("123456789123456789", bi1);
+    stringToBigInteger("987654321", bi2);
+    
+    BigInteger* result = BigIntegerMod(bi1, bi2);
+    assert(result != NULL);
+    char* str = toString(result);
+    assert(str != NULL);
+    assert(strcmp(str, "49382716") == 0);
+    free(str);
+    
+    Done(&bi1);
+    Done(&bi2);
+    Done(&result);
+    printf("[X] test_mod_large_numbers passed\n");
 }
 
 void test_NULLS() {
@@ -449,21 +602,22 @@ void test_NULLS() {
 
     assert(stringToBigInteger("test", NULL) == -1);
 
-    assert(add(NULL, bi1) == NULL);
+    assert(BigIntegerAdd(NULL, bi1) == NULL);
 
-    assert(add(bi1, NULL) == NULL);
+    assert(BigIntegerAdd(bi1, NULL) == NULL);
 
-    assert(mul(NULL, bi1) == NULL);
+    assert(BigIntegerMul(NULL, bi1) == NULL);
 
-    assert(mul(bi1, NULL) == NULL);
+    assert(BigIntegerMul(bi1, NULL) == NULL);
 
     stringToBigInteger("25", bi2);
-    resultADT = add(bi2, bi1);
+    resultADT = BigIntegerAdd(bi2, bi1);
     assert( strcmp(toString(resultADT), "25") == 0);
 
     Done(&bi1);
     Done(&bi2);
 }
+
 
 
 int main() {
@@ -501,6 +655,18 @@ int main() {
     test_mul_by_zero();
     test_mul_by_one();
     test_mul_large_numbers();
+
+    // Div
+    test_div_positive_numbers();
+    test_div_negative_numbers();
+    test_div_mixed_signs();
+    test_div_large_numbers();
+
+    // Mod
+    test_mod_positive_numbers();
+    test_mod_negative_numbers();
+    test_mod_mixed_signs();
+    test_mod_large_numbers();
 
     // NULLs
     test_NULLS();

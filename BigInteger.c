@@ -303,7 +303,7 @@ BigInteger* subAbsolute(BigInteger* a, BigInteger* b) {
    return res;
 }
 
-BigInteger* add(BigInteger* a, BigInteger* b) {
+BigInteger* BigIntegerAdd(BigInteger* a, BigInteger* b) {
    if (!a || !b) return NULL;
 
    if (a->sign == b->sign) {
@@ -330,19 +330,19 @@ BigInteger* add(BigInteger* a, BigInteger* b) {
    }
 }
 
-BigInteger* sub(BigInteger* a, BigInteger* b) {
+BigInteger* BigIntegerSub(BigInteger* a, BigInteger* b) {
    if (!a || !b) return NULL;
    
    int originalSignB = b->sign;
    b->sign = (originalSignB == 0) ? 1 : 0;
    
-   BigInteger* res = add(a, b);
+   BigInteger* res = BigIntegerAdd(a, b);
    
    b->sign = originalSignB;
    return res;
 }
 
-BigInteger* mul(BigInteger* a, BigInteger* b) {
+BigInteger* BigIntegerMul(BigInteger* a, BigInteger* b) {
    if (NULL == a || NULL == b) {
       return NULL;
    }
@@ -422,6 +422,7 @@ BigInteger* mul(BigInteger* a, BigInteger* b) {
       return NULL;
    }
 
+   // remove zeros
    BigIntegerData* tmp = NULL;
    for (int i = 0; i <= highestNonZero; ++i) {
       cur = calloc(1, sizeof(BigIntegerData));
@@ -453,4 +454,133 @@ BigInteger* mul(BigInteger* a, BigInteger* b) {
    return result;
 }
 
-// div, mod
+BigInteger* mulByLong(BigInteger* a, long b) {
+   if (b == 0) return Create();
+   BigInteger* res = Create();
+   BigIntegerData *curA = a->LowerDigits, *prev = NULL;
+   unsigned long long carry = 0;
+   long limit = myPow(BASE, BASE_POW);
+
+   while (curA || carry) {
+      unsigned long long val = carry + (unsigned long long)(curA ? curA->digits : 0) * b;
+      carry = val / limit;
+      
+      BigIntegerData* node = calloc(1, sizeof(BigIntegerData));
+      node->digits = (long)(val % limit);
+      if (!res->LowerDigits) res->LowerDigits = node;
+      if (prev) {
+         prev->next = node;
+         node->previous = prev;
+      }
+      prev = node;
+      if (curA) {
+         curA = curA->next;
+      }
+   }
+   res->HigherDigits = prev;
+   return res;
+}
+
+void trimLeadingZeros(BigInteger* ADT) {
+   while (ADT->HigherDigits && ADT->HigherDigits->digits == 0 && ADT->HigherDigits != ADT->LowerDigits) {
+      BigIntegerData* tmp = ADT->HigherDigits;
+      ADT->HigherDigits = ADT->HigherDigits->previous;
+      if (ADT->HigherDigits) ADT->HigherDigits->next = NULL;
+      free(tmp);
+   }
+}
+
+int appendNode(BigInteger* rem, long digits) {
+   if (isEmpty(rem) || (count(rem) == 1 && rem->LowerDigits->digits == 0)) {
+      if (!rem->LowerDigits) {
+         rem->LowerDigits = calloc(1, sizeof(BigIntegerData));
+         if (!rem->LowerDigits) {
+            return -2;
+         }
+      }
+      rem->LowerDigits->digits = digits;
+      rem->HigherDigits = rem->LowerDigits;
+      return 0;
+   }
+
+   BigIntegerData* newNode = calloc(1, sizeof(BigIntegerData));
+   if (newNode) {
+      newNode->digits = digits;
+      newNode->next = rem->LowerDigits;
+      rem->LowerDigits->previous = newNode;
+      rem->LowerDigits = newNode;
+      return 0;
+   }
+   return -1;
+}
+
+BigInteger* _div(BigInteger* a, BigInteger* b, int returnReminder) {
+   if (compareADTs(a, b) == -1 || isEmpty(a) || a->HigherDigits->digits == 0) {
+      return Create();
+   }
+   if (count(b) == 1 && b->HigherDigits->digits == 1) {
+      return clone(a);
+   }
+
+   BigInteger* quotient = Create();
+   BigInteger* remainder = Create();
+   BigIntegerData* curA = a->HigherDigits;
+
+   while (curA) {
+      appendNode(remainder, curA->digits);
+
+      long  low = 0,
+            high = myPow(BASE, BASE_POW) - 1,
+            q = 0;
+
+      while (low <= high) {
+         long mid = low + (high - low) / 2;
+         BigInteger* test = mulByLong(b, mid);
+
+         if (compareADTs(test, remainder) <= 0) {
+               q = mid;
+               low = mid + 1;
+         } else {
+               high = mid - 1;
+         }
+         Done(&test);
+      }
+
+      // Update reminder
+      BigInteger* qb = mulByLong(b, q);
+      BigInteger* nextRem = subAbsolute(remainder, qb);
+      copy(nextRem, remainder);
+      
+      appendNode(quotient, q); 
+      
+      Done(&qb);
+      Done(&nextRem);
+      curA = curA->previous;
+   }
+
+   if (returnReminder) {
+      Done(&quotient);
+      remainder->sign = a->sign;
+      trimLeadingZeros(remainder);
+      return remainder;
+   }
+
+   Done(&remainder);
+   quotient->sign = a->sign != b->sign;
+   trimLeadingZeros(quotient);
+   return quotient;
+}
+
+BigInteger* BigIntegerDiv (BigInteger* a, BigInteger* b) {
+   if (!a || !b || isEmpty(b) || b->HigherDigits->digits == 0) {
+      return NULL;
+   }
+   return _div(a, b, 0);
+}
+
+BigInteger* BigIntegerMod (BigInteger* a, BigInteger* b) {
+   if (!a || !b || isEmpty(b) || b->HigherDigits->digits == 0) {
+      return NULL;
+   }
+   return _div(a, b, 1);
+}
