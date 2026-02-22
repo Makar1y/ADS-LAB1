@@ -4,10 +4,6 @@
 
 #include "BigInteger.h"
 
-/*
-Turėtų būti realizuotos matematinės operacijos: add, sub, mul, div, mod.
-*/
-
 
 long long myPow(int num, int pow) {
    long long result = 1;
