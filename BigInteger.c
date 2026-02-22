@@ -107,10 +107,16 @@ int copy(BigInteger* src, BigInteger* dest) {
    dest->sign = src->sign;
 
    BigIntegerData* src_curr = src->LowerDigits;
-   BigIntegerData* dest_curr = dest->LowerDigits == NULL ? calloc(1, sizeof(BigIntegerData)) : dest->LowerDigits;
-   if (!dest_curr) return -2;
+   if (!src_curr) {
+      dest->LowerDigits = NULL;
+      dest->HigherDigits = NULL;
+      return 0;
+   }
 
-   BigIntegerData* prev = NULL;
+   BigIntegerData* dest_curr = calloc(1, sizeof(BigIntegerData));
+   if (!dest_curr) return -2;
+   dest->LowerDigits = dest_curr;
+   dest_curr->previous = NULL;
 
    while (src_curr) {
       dest_curr->digits = src_curr->digits;
@@ -121,8 +127,10 @@ int copy(BigInteger* src, BigInteger* dest) {
 
          dest_curr->next->previous = dest_curr;
          dest_curr = dest_curr->next;
+      } else {
+         dest_curr->next = NULL;
+         src_curr = src_curr->next;
       }
-      src_curr = src_curr->next;
    }
    dest->HigherDigits = dest_curr;
    return 0;
@@ -149,7 +157,7 @@ int makeEmpty(BigInteger* ADT) {
 }
 
 int Done(BigInteger** ptr_to_ADT) {
-   if (!ptr_to_ADT || !ptr_to_ADT) {
+   if (!ptr_to_ADT || !*ptr_to_ADT) {
       return -1;
    }
    makeEmpty(*ptr_to_ADT);
@@ -515,10 +523,19 @@ int appendNode(BigInteger* rem, long digits) {
 }
 
 BigInteger* _div(BigInteger* a, BigInteger* b, int returnReminder) {
-   if (compareADTs(a, b) == -1 || isEmpty(a) || a->HigherDigits->digits == 0) {
+   if (compareADTs(a, b) == -1 ) {
+      if (returnReminder) {
+         return clone(a);
+      }
+      return Create();
+   }
+   if (isEmpty(a) || a->HigherDigits->digits == 0) {
       return Create();
    }
    if (count(b) == 1 && b->HigherDigits->digits == 1) {
+      if (returnReminder) {
+         return Create();
+      }
       return clone(a);
    }
 
@@ -528,6 +545,7 @@ BigInteger* _div(BigInteger* a, BigInteger* b, int returnReminder) {
 
    while (curA) {
       appendNode(remainder, curA->digits);
+      trimLeadingZeros(remainder);
 
       long  low = 0,
             high = myPow(BASE, BASE_POW) - 1,
@@ -560,13 +578,13 @@ BigInteger* _div(BigInteger* a, BigInteger* b, int returnReminder) {
 
    if (returnReminder) {
       Done(&quotient);
-      remainder->sign = a->sign;
+      remainder->sign = !(count(remainder) == 1 && remainder->HigherDigits->digits == 0) ? a->sign : 0;
       trimLeadingZeros(remainder);
       return remainder;
    }
 
    Done(&remainder);
-   quotient->sign = a->sign != b->sign;
+   quotient->sign = !(count(quotient) == 1 && quotient->HigherDigits->digits == 0) ? a->sign != b->sign : 0;
    trimLeadingZeros(quotient);
    return quotient;
 }

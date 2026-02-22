@@ -511,7 +511,7 @@ void test_mod_negative_numbers() {
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
-    assert(strcmp(str, "0") == 0 || strcmp(str, "-0") == 0);
+    assert(strcmp(str, "-6") == 0);
     free(str);
     
     Done(&bi1);
@@ -544,13 +544,13 @@ void test_div_large_numbers() {
     BigInteger* bi2 = Create();
     stringToBigInteger("123456789123456789", bi1);
     stringToBigInteger("987654321", bi2);
+
     
     BigInteger* result = BigIntegerDiv(bi1, bi2);
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
-    printf("%s\n", str);
-    assert(strcmp(str, "124999999") == 0);
+    assert(strcmp(str, "124999998") == 0);
     free(str);
     
     Done(&bi1);
@@ -569,7 +569,7 @@ void test_mod_large_numbers() {
     assert(result != NULL);
     char* str = toString(result);
     assert(str != NULL);
-    assert(strcmp(str, "49382716") == 0);
+    assert(strcmp(str, "973765431") == 0);
     free(str);
     
     Done(&bi1);
