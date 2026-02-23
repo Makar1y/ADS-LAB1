@@ -135,4 +135,10 @@ BigInteger* BigIntegerDiv(BigInteger* a, BigInteger* b);
 /// @retval `NULL` if a or b is NULL, or if b is zero
 BigInteger* BigIntegerMod(BigInteger* a, BigInteger* b);
 
+/// @brief Multiplies a BigInteger by a long integer
+/// @param a BigInteger to multiply
+/// @param b Long integer multiplier
+/// @retval `BigInteger*` to newly allocated result
+/// @retval `NULL` if a is NULL or memory allocation fails
+BigInteger* mulByLong(BigInteger* a, long b);
 #endif
